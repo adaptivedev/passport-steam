@@ -1,8 +1,15 @@
 var express = require('express')
+  , http = require('http')
   , passport = require('passport')
   , util = require('util')
   , SteamStrategy = require('../../lib/passport-steam').Strategy;
 
+var logger = require('morgan');
+var cookieParser = require('cookie-parser');
+var bodyParser = require('body-parser');
+var methodOverride = require('method-override');
+var session = require('express-session');
+var router = require('express-router');
 
 // Passport session setup.
 //   To support persistent login sessions, Passport needs to be able to
@@ -26,7 +33,8 @@ passport.deserializeUser(function(obj, done) {
 //   callback with a user object.
 passport.use(new SteamStrategy({
     returnURL: 'http://localhost:3000/auth/steam/return',
-    realm: 'http://localhost:3000/'
+    realm: 'http://localhost:3000/',
+    apiKey: 'CBF808DF9BD1CED69B75882F2F466B82'
   },
   function(identifier, profile, done) {
     // asynchronous verification, for effect...
@@ -43,26 +51,26 @@ passport.use(new SteamStrategy({
 ));
 
 
+var app = express(); 
+var server = http.createServer(app);
 
-
-var app = express.createServer();
 
 // configure Express
-app.configure(function() {
+// app.configure(function() {
   app.set('views', __dirname + '/views');
   app.set('view engine', 'ejs');
-  app.use(express.logger());
-  app.use(express.cookieParser());
-  app.use(express.bodyParser());
-  app.use(express.methodOverride());
-  app.use(express.session({ secret: 'keyboard cat' }));
+  app.use('default', logger);
+  app.use(cookieParser);
+  app.use(bodyParser);
+  app.use(methodOverride);
+  app.use(session({ secret: 'keyboard cat' }));
   // Initialize Passport!  Also use passport.session() middleware, to support
   // persistent login sessions (recommended).
   app.use(passport.initialize());
   app.use(passport.session());
-  app.use(app.router);
+  app.use(router);
   app.use(express.static(__dirname + '/../../public'));
-});
+// });
 
 
 app.get('/', function(req, res){
